@@ -22,6 +22,8 @@ __pycache__/
 **/profiles/*
 **/models/*.txt
 *\images
+**\.ipynb_checkpoints\*
+
 #neptune
 *\.neptune
 
@@ -149,3 +151,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+brevis/raw_models/logs/**
+**/*.json
+**/*.code-workspace
+**/*.xlsx
