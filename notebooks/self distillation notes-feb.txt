@@ -1,0 +1,61 @@
+Self distillation results,
+
+14/02/22
+by removing the soft max in the distillation loss and using only the KL divergence of student and teacher I was able to train the student with the teacher to out perform the student alone. This was under the conditions of 3 epochs and contributed a 6% test set accuracy improvement(59% - 66%) using a teacher with a test accuracy of 79%. I think as the accuracy of the student/teacher approaches the teacher's performance, the input of the teacher should be reduced. 
+
+--- upon a redo, the difference was only 64-66 % so a difference of just above 2%.... this inconsistency even when I've supposedly tied down all the random aspects is really annoying and pissing me off... I had to restart my computer after a crash inbetween the two sets of tests? did something break? did I change something? Why did the base training suddenly jump in performance?
+
+15/02/22
+--- A day later and after restarting and re-running the same experiments, I got a difference of 60% - 68%. a difference of 8% because of the self distillation, using only the teacher loss for training. This means that there are some variables that are set based on the system level stuff that I am not addressing in my deterministic settings. Additionally I found that the test accuracy is very very close to the train accuracy, compared to before where the test accuracy would actually jump several points greater then the train accuracy at these small epoch training sets.
+
+-- I think this is enough to conclude that the self distillation can be helpful in training the models. I'm going to run another training round of up to 9 epochs and test the test values at each to build a comparision graph. 
+
+
+Something else I noticed, is that the loss of the teacher was much more reasonable when I didn't use a softmax in the distillation, this was because the softmax was reducing the already softmax'd results and making their differences practically negilible 
+
+
+16/02/22---
+
+I applied the only teacher distillation to the early exiting model and found that the distillation increased the final accuracy score by about 2% on both the first and second exits of the alexnet model. This addition of accuracy continued as it was trained further and once the first exit had reached its soft cap, the distilled version was still approx 2% more accurate which is a really interesting find. I am going to rebuild the distillation method to allow for an alpha again and eventually test a cooling down method that slowly decreases the input of the teacher as the exit trains away. Not sure what the mechanic will be that controls the cooling down amount. what was that called? something to do with bunsen burners and pipeting?idk
+
+My next task is then to repeat these tests and graph the difference, probably try using neptune to do this to save time on building the graph and logging it all with excel.
+
+
+
+economy of scale....
+
+
+
+22/02/22
+swapped to working on implementing the final version of brevis branching in tensorflow for the last few days. figured that I will need to build an actual IoT setup to get my journal published in an IoT publication so I will need it to actually work not just in theory and testing. Primary issue is getting the model to jump to the end of an inference when a branch triggers an accepted prediction that meets the threshold. This is difficult because the keras models don't actually queue up the layers and go through them, that functionality is far down the stack in terms of complexity. this means that I need to overload several functions that are deeper into the tensorflow engine. 
+
+Another issue I ran into is that I spent ages trying to work out how it all worked for one version of TF, but then realized today that I was looking at TF 2.2 for source code and running 2.8 in my notebooks. This created a problem as there was a major rework of where functionality was stored between these versions, moving stuff from a network.py file to a functional.py and changing the inheiritance that messed me up but in a way that wasn't noticiable until I really looked at it deeply.
+
+I found an issue with tensorflow graph travesal as TF builds the graphs from the bottom up to figure out the order to run nodes. This means that the model might have the layers inputed in the right order of completing a branch first and then back to the main tree, but instead the graph works on an A-star like completion of depth levels. 
+	I could promote this as a possible method of development, but it would probably confuse things more? IDK. I think it would be interesting to see if it would improve the averages of efficiency...
+
+
+24/02/22
+after much work I figured out how to manage the internal call of the model by using a custom _run_internal_graph function. this solves my issues of early stopping at an output within the graph. I could have used a simple 'for each layer' kind of approach, but in my tests I found this to be about 10% slower in single operations. which stacks up quickly, and faces the problem of not working well with branches and forking paths of operation. By ultilizing the already existing code for graph travesal I sidestep this and the performance and operation should stay in line with the rest of Tensorflows operation. until they change it of course....
+
+To use the graph like this I also have to change how the graph builds the depth map of all the nodes and layers. Tensorflow builds this in an output first kind of fashion. meaning that it organizes the graph to favour the furtherest output before closer exits. I was able to modify this by using another customization of a function, _map_graph_network, but the best I can get it too atm, is for the graph to follow what is closer to an A-star search pattern. the graph is reorganized that the layers are given depths based on their distance from the input. I'm not sure how this will work with multiple inputs at different depths, but thats a problem for the future.... 
+
+This still isn't perfect, as I would like to be able to flag a fork in the road and the completition of the shorter side of the fork first before continuing on the main path, but this is beyond me at this stage... The best idea to mimic this that I can think of is to bundle the branches togther as sub-models and have them complete as one combined depth. I'm pretty sure this will work, but we will soon see... 
+
+
+26/02/22
+Finished building the branching internal methods, now it has proper triggers based on layer hyperparams, which can also be adjusted from the model level. also changed the model to properly subclass keras models instead of containing one. this makes the syntax to use everything much closer to the standard techniques. 
+
+28/02/22
+started to incorporate the evidence displaying results and determining the thresholds into the library as well, instead of them jsut being in the jupyter notebooks. these will be the standard ones that I use as a baseline and if I want to try something different i can always override them. this changing and checking was why they were only in the notebooks so far for ease of changes, but the downside is that Its hard to know which version among all the notebooks is the one I am most happy with.
+
+next up is to check the output results of the branching exits turned on, making sure that the outputs to the following exits trigger properly and that the summarizing afterwards is correct. I think there might be issues with measuring the accuray rate of the later exits because it will probably compare to the overall number of inputs not the ones that have made it there.
+
+Then I need to check the timing tests, make sure its all making sense and passing sanity checks. 
+
+then finally I can bundle it up into a box and try running it on a docker container. I'll have the outputs sent to neptune I think? idk, the mapping of all results I haven't figured out yet. perhaps i could use an ssh back to a main file, or set up a mongodb and have the values sent to there. I should also figure out how to start a bunch of them together, but this is getting bogged down in the details of the experiment, when I actually want to be writing it out.... I need to define short term goals that get me closer to my writing goals finished. 
+
+-- the evaluation and making the thresholds is really slow since it has to run through each input at a time... is there a way to do this with batch inputs?
+
+
+

@@ -1,7 +1,29 @@
+#model files
+*.h5
+*.hdf5
+*.tf
+data/*
+logs/*
+*/logs/*
+*/logs_entropy/*
+*/results/*
+tensorflow_2_tutorials-master/logs/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.png
+**\variables
+*.pb
+*/imagenette2-320/*
+**/results/*
+**/logs_entropy/*
+**/notebooks/*.csv
+**/profiles/*
+**/models/*.txt
+*\images
+#neptune
+*\.neptune
 
 # C extensions
 *.so
