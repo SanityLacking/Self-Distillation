@@ -22,9 +22,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, precision_recall_curve, plot_precision_recall_curve
 
-from brevis.utils import *
-import brevis as branching
-import brevis.core_v2 as brevis
+from branching.utils import *
+import branching as brevis
+import branching.core_v2 as brevis
 from scipy.special import gammaln, digamma
 from scipy.special import logsumexp
 
@@ -631,7 +631,7 @@ def collectEvidence_branches(model,test_ds, evidence=True,stopping_point=None):
                 else:
                     pAcc[j].append(0)  
                 # print(branching.utils.calcEntropy_Tensors(result[j]).numpy())
-                pEvidence[j].append(branching.utils.calcEntropy_Tensors(result[j]).numpy()[0])
+                pEvidence[j].append(brevis.utils.calcEntropy_Tensors(result[j]).numpy()[0])
 
                 pOverlap[j].append(pAcc[0][i] - pAcc[j][i])
         '''

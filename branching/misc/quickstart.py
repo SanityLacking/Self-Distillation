@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 import matplotlib.cm as cm
 
-from brevis.utils import *
-import brevis as branching
+from branching.utils import *
+import branching as branching
 def Run_alexNet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
     x = tf.keras.models.load_model("models/{}".format(modelName))
 

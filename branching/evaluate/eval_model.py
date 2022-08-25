@@ -13,9 +13,9 @@ import os
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
 # from Alexnet_kaggle_v2 import * 
-import brevis as branching
+import branching as branching
 
-from brevis.utils import *
+from branching.utils import *
 
 
 def evalBranchMatrix_old(model, input, labels=""):

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
 import matplotlib.cm as cm
 
-from brevis.utils import *
+from branching.utils import *
 
 
 class branchyEval:

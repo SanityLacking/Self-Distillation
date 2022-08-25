@@ -1,5 +1,5 @@
 # import the necessary packages
-from brevis.models import train
+from branching.models import train
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -19,8 +19,8 @@ import os
 # from utils import *
 
 # from Alexnet_kaggle_v2 import * 
-import brevis as branching
-from brevis.utils import * 
+import branching as branching
+from branching.utils import * 
 
 # ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     #         )
             
     #### the new improved evidence model ####
-    brevis = (branching.core.branched_model(modelName="models/alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
+    branching = (branching.core.branched_model(modelName="models/alexNetv6_logits.hdf5",saveName="alexNetv6_entropy_class",transfer=True,customOptions="")
             .add_branches(branching.branches.branch.newBranch_flatten_evidence,["max_pooling2d","max_pooling2d_1","dense"])
             .set_dataset(dataset)
             .train(30,loss=tf.keras.losses.CategoricalCrossentropy(), optimizer=tf.optimizers.SGD(lr=0.001, momentum=0.9), transfer=True, customOptions="CrossE")

@@ -16,7 +16,7 @@ import pydot
 import os
 #os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
 #from tensorflow.keras.utils import plot_model
-from brevis.utils import *
+from branching.utils import *
 
 from AlexNet_v3 import * 
 from branchyNet import BranchyNet

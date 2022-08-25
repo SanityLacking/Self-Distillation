@@ -151,7 +151,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-brevis/raw_models/logs/**
+**/raw_models/logs/**
 **/*.json
 **/*.code-workspace
 **/*.xlsx

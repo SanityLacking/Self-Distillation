@@ -6,8 +6,8 @@ from tensorflow.keras.models import load_model
 import itertools
 import time
 import json
-import brevis
-from brevis.utils import *
+import branching
+from branching.utils import *
 
 
 class mnistBranch(BranchyNet):

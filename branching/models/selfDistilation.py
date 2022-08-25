@@ -1,7 +1,7 @@
 
 
 # import the necessary packages
-import brevis
+import branching
 
 import numpy as np
 import tensorflow as tf
@@ -15,15 +15,14 @@ import math
 import pydot
 import os
 
-from brevis.utils import *
-from brevis.branches import branch
-from brevis.dataset import prepare
-from brevis.initNeptune import Neptune
+from branching.utils import *
+from branching.branches import branch
+from branching.dataset import prepare
 
 # import branchyNet
 #class for building a seflDistilation branching model.
 
-class SelfDistilation(brevis.BranchModel):
+class SelfDistilation(branching.BranchModel):
 
      # initialize an implementation of alexnet branching that uses the selfdistil methodology
     def alexnet(numEpocs = 2, modelName="", saveName ="",transfer = True,customOptions=""):
@@ -71,7 +70,6 @@ class SelfDistilation(brevis.BranchModel):
         student_model.compile(optimizer=tf.optimizers.SGD(lr=0.001,clipvalue=0.5), loss='SparseCategoricalCrossentropy', metrics=['accuracy',confidenceDifference],run_eagerly=True)
         
 
-        neptune_cbk = Neptune.getcallback(name = "feature_distill_example", tags =["knowledge_distill","example"])
         train_ds, test_ds, validation_ds = prepare.dataset(data,32,5000,22500,(227,227))
 
 
@@ -126,7 +124,6 @@ class SelfDistilation(brevis.BranchModel):
         
         teaching_model.compile(optimizer=tf.optimizers.SGD(lr=0.001,clipvalue=0.5), loss='SparseCategoricalCrossentropy', metrics=['accuracy',confidenceDifference],run_eagerly=True)
 
-        neptune_cbk = Neptune.getcallback(name = "feature_distill_example", tags =["knowledge_distill","example"])
         train_ds, test_ds, validation_ds = prepare.dataset(data,32,5000,22500,(227,227))
 
 
