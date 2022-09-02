@@ -56,11 +56,12 @@ from .evaluate import evaluate
 
 #check if neptune is installed, if not, continue without it after a warning.
 neptune_spec = importlib.util.find_spec("neptune")
-NepLogging = False
+# NepLogging = False
 # NepLogging = neptune_spec is not None
 # if NepLogging:
 #     warnings.warn("Logging module Neptune was found, Cloud Logging can be enabled, call enable_neptune to do so. Check initNeptune.py to configure settings")
-#     from initNeptune import Neptune
+from initNeptune import Neptune
+Nep = Neptune()
 # else:
 #     warnings.warn("Logging module Neptune was not found, Cloud Logging will not be enabled, check https://docs.neptune.ai/getting-started/installation for more information on how to set this up")
 
@@ -262,29 +263,31 @@ class BranchModel(tf.keras.Model):
         
     #     return self
 
-    # def fit(self, train_ds, validation_data=None, validation_freq = 1, epochs=1, callbacks=[], saveName = "", freeze = False, custom_objects={}):
-    #     """
-    #     Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
-    #     """
-    #     # custom_objects = {**self.default_custom_objects,**custom_objects} 
-    #     self.setTrainable(freeze) #Freeze main branch layers
-    #     run_logdir = get_run_logdir(self.name)
-    #     tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
-    #     if saveName =="":
-    #         newModelName = "{}_branched".format(self.name )
-    #     else:
-    #         newModelName = saveName
-    #     # checkpoint = keras.callbacks.ModelCheckpoint("models/{}".format(newModelName), monitor='val_loss', verbose=1, mode='max')
-    #     # print("nep {}".format(NepLogging))
-    #     # if NepLogging == True:
-    #     #     neptune_cbk = Neptune.getcallback()
-    #     #     callbacks = callbacks + neptune_cbk
+    def fit(self, train_ds, validation_data=None, validation_freq = 1, epochs=1, callbacks=[], saveName = "", freeze = False, custom_objects={}, parameters={}):
+        """
+        Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
+        """
+        # custom_objects = {**self.default_custom_objects,**custom_objects} 
+        self.setTrainable(freeze) #Freeze main branch layers
+        run_logdir = get_run_logdir(self.name)
+        tensorboard_cb = keras.callbacks.TensorBoard(run_logdir)
+        if saveName =="":
+            newModelName = "{}_branched".format(self.name )
+        else:
+            newModelName = saveName
+        # checkpoint = keras.callbacks.ModelCheckpoint("models/{}".format(newModelName), monitor='val_loss', verbose=1, mode='max')
+        # print("nep {}".format(NepLogging))
+        # if NepLogging == True:
+        # if "tag" in custom_objects
+        neptune_cbk = Nep.startRun(parameters)
+        # callbacks = callbacks + neptune_cbk
 
-    #     history =super().fit(train_ds,
-    #             epochs=epochs,
-    #             validation_data=validation_data,
-    #             )
-    #             # callbacks=[tensorboard_cb]+callbacks)
+        history =super().fit(train_ds,
+                epochs=epochs,
+                validation_data=validation_data,                
+                callbacks=[tensorboard_cb,callbacks, neptune_cbk])
+        Nep.stopRun()
+
         
     #     return self
 
