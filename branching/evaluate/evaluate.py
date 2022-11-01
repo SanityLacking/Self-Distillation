@@ -24,7 +24,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 from branching.utils import *
 import branching as brevis
-import branching.core_v2 as brevis
+import branching.core as brevis
 from scipy.special import gammaln, digamma
 from scipy.special import logsumexp
 

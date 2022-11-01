@@ -1,6 +1,7 @@
 import collections
 import copy
 import itertools
+from pickle import NONE
 import warnings
 from sqlalchemy import true
 
@@ -53,49 +54,18 @@ from .evaluate import evaluate
 
 
 #neptune remote ML monitoring 
+try:
+    from initNeptune import Neptune
+    warnings.warn("Logging module Neptune was found, Cloud Logging can be enabled, Check initNeptune.py to configure settings")
+    Nep = Neptune()
+except ImportError:    
+    warnings.warn("Logging module Neptune was not found, Cloud Logging is not enabled, check https://docs.neptune.ai/getting-started/installation for more information on how to set this up")
+    Nep = None
 
-#check if neptune is installed, if not, continue without it after a warning.
-neptune_spec = importlib.util.find_spec("neptune")
-# NepLogging = False
-# NepLogging = neptune_spec is not None
-# if NepLogging:
-#     warnings.warn("Logging module Neptune was found, Cloud Logging can be enabled, call enable_neptune to do so. Check initNeptune.py to configure settings")
-from initNeptune import Neptune
-Nep = Neptune()
-# else:
-#     warnings.warn("Logging module Neptune was not found, Cloud Logging will not be enabled, check https://docs.neptune.ai/getting-started/installation for more information on how to set this up")
-
-# def enable_neptune(val=True):
-#     NeptLogging = val
-#     print("neptune is now set to {}. is the module loaded to prevent errors later?".format(NepLogging))
-
-#local imports
 from .utils import *
-
-# from keras.models import load_model
-# from keras.utils import CustomObjectScope
-# from keras.initializers import glorot_uniform
-
-
-
-#os.environ["PATH"] += os.pathsep + "C:\Program Files\Graphviz\bin"
-#from tensorflow.keras.utils import plot_model
-
-
-# from Alexnet_kaggle_v2 import * 
-
-
-
-
-
-# ALEXNET = False
 config = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
 sess = tf.compat.v1.Session(config=config)
 root_logdir = os.path.join(os.curdir, "logs\\fit\\")
-
-
-
-
 
 class BranchModel(tf.keras.Model):
     '''
@@ -166,10 +136,8 @@ class BranchModel(tf.keras.Model):
         for depth in depth_keys:
             nodes = nodes_by_depth[depth]
             for node in nodes:
-                # print(node.layer.name)
                 if node.is_input:
                     continue  # Input tensors already exist.
-
                 if any(t_id not in tensor_dict for t_id in node.flat_input_ids):
                     continue  # Node is not computable, try skipping.
 
@@ -179,11 +147,9 @@ class BranchModel(tf.keras.Model):
                 for x_id, y in zip(node.flat_output_ids, nest.flatten(outputs)):
                     tensor_dict[x_id] = [y] * tensor_usage_count[x_id]
                 ## check if branch exiting is turned on and if current layer is a potential exit.
-                # print(node.layer.name, hasattr(node.layer, 'branch_exit'))
                 if not training:
                     if self.branch_active == True and hasattr(node.layer, 'branch_exit'):  
                         ## check if the confidence of output of the layer is equal to or above the threshold hyperparameter
-                        # print("threshold: ", node.layer.threshold, "evidence: ", tf.reduce_sum(node.layer.evidence(outputs)))
                         if node.layer.branch_exit and (tf.reduce_sum(node.layer.evidence(outputs)) >= node.layer.confidence_threshold): ##check if current layer's exit is active
                             # print("branch exit activated")
                             output_tensors = []
@@ -211,15 +177,10 @@ class BranchModel(tf.keras.Model):
     def add_branches(self,branchName, branchPoints=[], exact = True, target_input = False, compact = False, loop=True,num_outputs=10):
         if len(branchPoints) == 0:
             return
-        # ["max_pooling2d","max_pooling2d_1","dense"]
-        # branch.newBranch_flatten
-        # if loop:
-            # newModel = branch.add_loop(self,branchName, branchPoints,exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         else:
             newModel = branch.add(self,branchName,branchPoints, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         print("branch added", newModel)
         self.__dict__.update(newModel.__dict__)
-
         return self
     
 
@@ -242,6 +203,8 @@ class BranchModel(tf.keras.Model):
                 self.layers[i].trainable = True
                 # print("setting ",self.layers[i].name," training to true")
 
+
+    #  OLD fit function
     # def fit(self, train_ds, validation_data=None, epochs=1, callbacks=[], saveName = "", transfer = False, customOptions=""):
     #     """Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
     # """
@@ -263,7 +226,7 @@ class BranchModel(tf.keras.Model):
         
     #     return self
 
-    def fit(self, train_ds, validation_data=None, validation_freq = 1, epochs=1, callbacks=[], saveName = "", freeze = False, custom_objects={}, parameters={}):
+    def fit(self, train_ds, validation_data=None, validation_freq = 1, epochs=1, callbacks=[], saveName = "", freeze = False, custom_objects={}, parameters=[]):
         """
         Train the model that is passed using transfer learning. This function expects a model with trained main branches and untrained (or randomized) side branches.
         """
@@ -275,24 +238,20 @@ class BranchModel(tf.keras.Model):
             newModelName = "{}_branched".format(self.name )
         else:
             newModelName = saveName
-        # checkpoint = keras.callbacks.ModelCheckpoint("models/{}".format(newModelName), monitor='val_loss', verbose=1, mode='max')
-        # print("nep {}".format(NepLogging))
-        # if NepLogging == True:
-        # if "tag" in custom_objects
-        neptune_cbk = Nep.startRun(parameters)
-        # callbacks = callbacks + neptune_cbk
-
+        if Nep:
+            neptune_cbk = Nep.startRun(parameters)
+            Nep.resetTags()
+            Nep.addTags(parameters)
+        else:
+            neptune_cbk =  []
+        
         history =super().fit(train_ds,
                 epochs=epochs,
                 validation_data=validation_data,                
                 callbacks=[tensorboard_cb,callbacks, neptune_cbk])
-        Nep.stopRun()
-
         
-    #     return self
-
-    # def evaluate(self, *args, **kwargs):
-        # return super().evaluate(args, kwargs)
+        if Nep:
+            Nep.stopRun()
 
 
 class Distill_BranchModel(BranchModel):        
@@ -314,10 +273,6 @@ class Distill_BranchModel(BranchModel):
     def add_branches(self,branchName, branchPoints=[], exact = True, target_input = False, compact = False, loop=True,num_outputs=10):
         if len(branchPoints) == 0:
             return
-        # ["max_pooling2d","max_pooling2d_1","dense"]
-        # branch.newBranch_flatten
-        # if loop:
-            # newModel = branch.add_loop(self,branchName, branchPoints,exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         else:
             newModel = branch.add(self,branchName,branchPoints, exact=exact, target_input = target_input, compact = compact,num_outputs=num_outputs)
         print("branch added", newModel)

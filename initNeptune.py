@@ -7,6 +7,7 @@ class Neptune:
     def __init__(self, projectName="", api_token=""):
         self.parameters={}
 
+
     def startRun(self,parameters={}):
         self.run = neptune.init(project=Cred.project, api_token=Cred.api_token)
         self.run["model/parameters"] = parameters
@@ -19,4 +20,8 @@ class Neptune:
         neptune_cbk = NeptuneCallback(run=self.run, base_namespace='metrics')
         return neptune_cbk
 
-    
+    def resetTags(self):
+        self.run["sys/tags"].clear()
+
+    def addTags(self,tags=[]):
+        self.run["sys/tags"].add(tags)
